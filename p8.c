@@ -6,7 +6,7 @@
 
 #include "p8.h"
 
-// some pre-defined P8 shit
+// some pre-defined P8 stuff
 
 typedef struct _P8_Colour
 {
