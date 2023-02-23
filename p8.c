@@ -267,9 +267,78 @@ int main(int argc, char** argv)
 
 void P8_Callback(int iCallback, int iArgCount, ...)
 {
-    uint8_t* dataPtr = NULL;
-    int colourI = 0;
-    int clsColour = 0;
+    // stores context for each callback
+    union
+    {
+        struct {
+            uint8_t* data;
+        } LoadAtlas;
+
+        struct {
+            uint8_t* data;
+        } LoadMap;
+
+        struct {
+            uint8_t* data;
+        } LoadFlags;
+
+        struct {
+            char** fileNames;
+            int fileCount;
+        } LoadSfx;
+
+        struct {
+            char** fileNames;
+            int fileCount;
+        } LoadMusic;
+
+        struct {
+            int colour;
+        } Cls;
+
+        struct {
+            int colour;
+        } Color;
+
+        struct {
+            int tile_x, tile_y, sx, sy, tile_w, tile_h, layers;
+        } Map;
+
+        struct {
+            int n, x, y, w, h;
+            bool flip_x, flip_y;
+        } Spr;
+
+        struct {
+            int sx, sy, sw, sh, dx, dy, dw, dh;
+            bool flip_x, flip_y;
+        } Sspr;
+
+        struct {
+            int x0, y0, x1, y1, col;
+        } Rect;
+
+        struct {
+            int x, y, r, col;
+        } Circ;
+
+        struct {
+            uint16_t pattern;
+            bool useTransparency;
+        } Fillp;
+
+        struct {
+            uint16_t bits;
+            int c;
+            bool t;
+        } Palt;
+
+        struct {
+            int c0, c1, p;
+        } Pal;
+
+    } Context;
+
     P8_Colour colour;
 
     va_list Args;
@@ -283,30 +352,45 @@ void P8_Callback(int iCallback, int iArgCount, ...)
     case P8_CALLBACK_LOADATLASDATA:
         if (iArgCount > 0)
         {
-            dataPtr = va_arg(Args, uint8_t*);
-            if (dataPtr != NULL)
-                memcpy(AtlasData, dataPtr, 8192);
+            Context.LoadAtlas.data = va_arg(Args, uint8_t*);
+            if (Context.LoadAtlas.data != NULL)
+                memcpy(AtlasData, Context.LoadAtlas.data, 8192);
         }
         break;
 
     case P8_CALLBACK_LOADMAPDATA:
         if (iArgCount > 0)
         {
-            dataPtr = va_arg(Args, uint8_t*);
-            if (dataPtr != NULL)
-                memcpy(MapData, dataPtr, 8192);
+            Context.LoadMap.data = va_arg(Args, uint8_t*);
+            if (Context.LoadMap.data != NULL)
+                memcpy(MapData, Context.LoadMap.data, 8192);
         }
         break;
 
     case P8_CALLBACK_LOADFLAGSDATA:
         if (iArgCount > 0)
         {
-            dataPtr = va_arg(Args, uint8_t*);
-            if (dataPtr != NULL)
-                memcpy(FlagData, dataPtr, 128);
+            Context.LoadFlags.data = va_arg(Args, uint8_t*);
+            if (Context.LoadFlags.data != NULL)
+                memcpy(FlagData, Context.LoadFlags.data, 128);
         }
         break;
 
+    case P8_CALLBACK_LOADMUSICDATA:
+        if (iArgCount >= 2)
+        {
+            Context.LoadMusic.fileNames = va_arg(Args, char**);
+            Context.LoadMusic.fileCount = va_arg(Args, int);
+        }
+        break;
+
+    case P8_CALLBACK_LOADSFXDATA:
+        if (iArgCount >= 2)
+        {
+            Context.LoadSfx.fileNames = va_arg(Args, char**);
+            Context.LoadSfx.fileCount = va_arg(Args, int);
+        }
+        break;
     
     case P8_CALLBACK_CLS:
         if (iArgCount == 0)
@@ -315,8 +399,8 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 1)
         { // coloured clear screen
-            clsColour = va_arg(Args, int);
-            InternalClearScreenSDL(clsColour);
+            Context.Cls.colour = va_arg(Args, int);
+            InternalClearScreenSDL(Context.Cls.colour);
         }
 
         break;
@@ -325,13 +409,13 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         if (iArgCount == 0)
         {
             ColourPicked = 6;
-            colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
+            Context.Color.colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
             SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
         }
         else if (iArgCount == 1)
         {
-            colourI = va_arg(Args, int);
-            ColourPicked = colourI;
+            Context.Color.colour = va_arg(Args, int);
+            ColourPicked = Context.Color.colour;
             colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
             SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
         }
@@ -342,22 +426,45 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         break;
 
     // sprite, map shit
-    case P8_CALLBACK_MAP: break;
-    case P8_CALLBACK_SPR: break;
-    case P8_CALLBACK_SSPR: break;
+    case P8_CALLBACK_MAP: 
+        break;
+
+    case P8_CALLBACK_SPR: 
+        break;
+
+    case P8_CALLBACK_SSPR: 
+        break;
+
 
     // primitives
-    case P8_CALLBACK_RECT: break;
-    case P8_CALLBACK_RECTFILL: break;
-    case P8_CALLBACK_CIRC: break;
-    case P8_CALLBACK_CIRCFILL: break;
-    case P8_CALLBACK_OVAL: break;
-    case P8_CALLBACK_LINE: break;
+    case P8_CALLBACK_RECT: 
+        break;
+
+    case P8_CALLBACK_RECTFILL: 
+        break;
+
+    case P8_CALLBACK_CIRC: 
+        break;
+
+    case P8_CALLBACK_CIRCFILL: 
+        break;
+
+    case P8_CALLBACK_OVAL: 
+        break;
+
+    case P8_CALLBACK_LINE: 
+        break;
 
     // modify some special draw state
-    case P8_CALLBACK_FILLP: break;
-    case P8_CALLBACK_PAL: break;
-    case P8_CALLBACK_PALT: break;
+    case P8_CALLBACK_FILLP: 
+        break;
+
+    case P8_CALLBACK_PAL: 
+        break;
+
+    case P8_CALLBACK_PALT: 
+        break;
+
     }
 
     return;

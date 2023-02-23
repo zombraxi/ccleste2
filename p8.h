@@ -21,6 +21,8 @@ enum {
     P8_CALLBACK_LOADMAPDATA,
     P8_CALLBACK_LOADATLASDATA,
     P8_CALLBACK_LOADFLAGSDATA,
+    P8_CALLBACK_LOADSFXDATA,
+    P8_CALLBACK_LOADMUSICDATA,
 
     P8_CALLBACK_CLS,
     P8_CALLBACK_FLIP,
@@ -50,19 +52,23 @@ enum {
 // Call Results...
 enum {
     P8_CALLRESULT_MGET,
-    P8_CALLRESULT_FGET
+    P8_CALLRESULT_FGET,
+    P8_CALLRESULT_RND,
+    P8_CALLRESULT_BTN,
 };
 
 // Callback in this context meaning that it does not return a value,
 // simply runs a VM operation
 extern void P8_Callback(int iCallback, int iArgCount, ...);
 
-// Call result is a VM operation which returns a value
+// Call result is a VM operation which returns a value ( an int in this case )
 extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 
 inline void P8_LOADMAP(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADMAPDATA, 1, dataPtr);  }
 inline void P8_LOADATLASDATA(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADATLASDATA, 1, dataPtr); }
 inline void P8_LOADFLAGSDATA(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADFLAGSDATA, 1, dataPtr); }
+inline void P8_LOADSFXDATA(const char* fileNames[], int count) { P8_Callback(P8_CALLBACK_LOADSFXDATA, 2, fileNames, count); }
+inline void P8_LOADMUSICDATA(const char* fileNames[], int count) { P8_Callback(P8_CALLBACK_LOADMUSICDATA, 2, fileNames, count); }
 
 inline void P8_CLS() { P8_Callback(P8_CALLBACK_CLS, 0); }
 inline void P8_CLS2(int c) { P8_Callback(P8_CALLBACK_CLS, 1, c); }
@@ -97,5 +103,13 @@ inline void P8_CIRC2(int x, int y, int r, int col) { P8_Callback(P8_CALLBACK_CIR
 
 inline void P8_CIRCFILL(int x, int y, int r) { P8_Callback(P8_CALLBACK_CIRCFILL, 3, x, y, r); }
 inline void P8_CIRCFILL2(int x, int y, int r, int col) { P8_Callback(P8_CALLBACK_CIRCFILL, 4, x, y, r, col); }
+
+// audio
+inline void P8_SFX(int n) { P8_Callback(P8_CALLBACK_SFX, 1, n); }
+inline void P8_SFX2(int n, int channel) { P8_Callback(P8_CALLBACK_SFX, 2, n, channel); }
+inline void P8_SFX3(int n, int channel, int offset) { P8_Callback(P8_CALLBACK_SFX, 3, n, channel, offset); }
+inline void P8_SFX4(int n, int channel, int offset, int length) { P8_Callback(P8_CALLBACK_SFX, 4, n, channel, offset, length); }
+
+inline void P8_MUSIC(int n) { }
 
 #endif
