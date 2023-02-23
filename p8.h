@@ -2,9 +2,9 @@
 
 // Application-defined
 
-extern void _init();
-extern void _update();
-extern void _draw();
+extern void _P8_init();
+extern void _P8_update();
+extern void _P8_draw();
 
 // P8 vm...
 
