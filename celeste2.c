@@ -20,6 +20,9 @@ int titlescreen_flash = 0;
 int current_music = 0;
 int infade = 0;
 
+CC2_SNOW snow[CC2_MAX_SNOW_CLOUDS];
+CC2_CLOUD clouds[CC2_MAX_SNOW_CLOUDS];
+
 static void game_start()
 {
     memset(snow, 0, sizeof(CC2_SNOW) * CC2_MAX_SNOW_CLOUDS);
@@ -47,11 +50,11 @@ static void game_start()
     {
         s = ((CC2_SNOW*)snow + i);
         c = ((CC2_CLOUD*)clouds + i);
-        s->x = (float)P8_RND(132);
-        s->y = (float)P8_RND(132);
-        c->x = (float)P8_RND(132);
-        c->y = (float)P8_RND(132);
-        c->s = 16 + P8_RND(32);
+        s->x = P8_RND(132);
+        s->y = P8_RND(132);
+        c->x = P8_RND(132);
+        c->y = P8_RND(132);
+        c->s = 16 + (int)P8_RND(32);
     }
 
     // goto titlescreen or level
@@ -60,7 +63,7 @@ static void game_start()
         current_music = 38;
         P8_MUSIC(current_music);
     }
-    else goto_level(level_index);
+    else ;// goto_level(level_index);
 }
 
 void _P8_init() { game_start(); }

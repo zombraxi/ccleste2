@@ -406,10 +406,10 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         break;
 
     case P8_CALLBACK_COLOR:
-        if (iArgCount == 0)
+        if (iArgCount == 0) // if no arguments, sets color to 6
         {
             ColourPicked = 6;
-            Context.Color.colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
+            colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
             SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
         }
         else if (iArgCount == 1)

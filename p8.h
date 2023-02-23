@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 // Application-defined
 
@@ -46,23 +47,13 @@ enum {
     P8_CALLBACK_CLIP,
 
     P8_CALLBACK_SFX,
-    P8_CALLBACK_MUSIC
-};
+    P8_CALLBACK_MUSIC,
 
-// Call Results...
-enum {
-    P8_CALLRESULT_MGET,
-    P8_CALLRESULT_FGET,
-    P8_CALLRESULT_RND,
-    P8_CALLRESULT_BTN,
 };
 
 // Callback in this context meaning that it does not return a value,
 // simply runs a VM operation
 extern void P8_Callback(int iCallback, int iArgCount, ...);
-
-// Call result is a VM operation which returns a value ( an int in this case )
-extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 
 inline void P8_LOADMAP(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADMAPDATA, 1, dataPtr);  }
 inline void P8_LOADATLASDATA(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADATLASDATA, 1, dataPtr); }
@@ -110,6 +101,24 @@ inline void P8_SFX2(int n, int channel) { P8_Callback(P8_CALLBACK_SFX, 2, n, cha
 inline void P8_SFX3(int n, int channel, int offset) { P8_Callback(P8_CALLBACK_SFX, 3, n, channel, offset); }
 inline void P8_SFX4(int n, int channel, int offset, int length) { P8_Callback(P8_CALLBACK_SFX, 4, n, channel, offset, length); }
 
-inline void P8_MUSIC(int n) { }
+inline void P8_MUSIC(int n) { P8_Callback(P8_CALLBACK_MUSIC, 1, n); }
+inline void P8_MUSIC2(int n, int fade_len) { P8_Callback(P8_CALLBACK_MUSIC, 2, n, fade_len); }
+inline void P8_MUSIC3(int n, int fade_len, int channel_mask) { P8_Callback(P8_CALLBACK_MUSIC, 3, n, fade_len, channel_mask); }
+
+// Call Results...
+enum {
+    P8_CALLRESULT_MGET,
+    P8_CALLRESULT_FGET,
+    P8_CALLRESULT_BTN,
+};
+
+// Call result is a VM operation which returns a value ( an int in this case )
+extern int P8_CallResult(int iCallResult, int iArgCount, ...);
+
+
+// Math, other operations that dont fit
+// the bill for being a Callback or CallResult
+
+inline float P8_RND(float x) { return 0.0f; }
 
 #endif
