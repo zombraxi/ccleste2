@@ -8,6 +8,11 @@
 
 // some pre-defined P8 stuff
 
+typedef struct _P8_VecI2
+{
+    int x, y;
+} P8_VecI2;
+
 typedef struct _P8_Colour
 {
     uint8_t r, g, b;
@@ -105,6 +110,7 @@ static bool FillPatternTransparency;
 static uint16_t Transparency;
 static int PaletteIndexTbl[16];
 static int ColourPicked;
+static P8_VecI2 Camera;
 
 static void ResetClipRectSDL()
 {
@@ -264,6 +270,7 @@ void P8_Callback(int iCallback, int iArgCount, ...)
     uint8_t* dataPtr = NULL;
     int colourI = 0;
     int clsColour = 0;
+    P8_Colour colour;
 
     va_list Args;
     va_start(Args, iArgCount);
@@ -315,18 +322,42 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         break;
 
     case P8_CALLBACK_COLOR:
-        if (iArgCount == 0) ColourPicked = 6;
+        if (iArgCount == 0)
+        {
+            ColourPicked = 6;
+            colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
+            SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
+        }
         else if (iArgCount == 1)
         {
             colourI = va_arg(Args, int);
             ColourPicked = colourI;
+            colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
+            SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
         }
-        else ColourPicked = 6;
         break;
 
     case P8_CALLBACK_FLIP:
         InternalFlipSDL();
         break;
+
+    // sprite, map shit
+    case P8_CALLBACK_MAP: break;
+    case P8_CALLBACK_SPR: break;
+    case P8_CALLBACK_SSPR: break;
+
+    // primitives
+    case P8_CALLBACK_RECT: break;
+    case P8_CALLBACK_RECTFILL: break;
+    case P8_CALLBACK_CIRC: break;
+    case P8_CALLBACK_CIRCFILL: break;
+    case P8_CALLBACK_OVAL: break;
+    case P8_CALLBACK_LINE: break;
+
+    // modify some special draw state
+    case P8_CALLBACK_FILLP: break;
+    case P8_CALLBACK_PAL: break;
+    case P8_CALLBACK_PALT: break;
     }
 
     return;
