@@ -9,6 +9,77 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
+// SDL manage
+static SDL_Renderer* Renderer = NULL;
+static SDL_Window* Window = NULL;
+
+static bool InternalInitSDL()
+{
+    bool didInit = true;
+    SDL_DisplayMode displayMode;
+    const int windowRealWH = 128;
+    int winHeightWidth = 128;
+
+    // init SDL
+    SDL_SetMainReady(); // ensure SDL_Init wont fail
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
+    { // if it fails
+        didInit = false;
+        goto EndProc;
+    }
+
+    // get our desktop display
+    if (SDL_GetDesktopDisplayMode(0, &displayMode) != 0)
+    { // fails to get display mode
+        didInit = false;
+        goto EndProc;
+    }
+
+    // get the window creation size 1:1 ratio
+    winHeightWidth = (displayMode.h > 128) ? 
+        ( ((int)(displayMode.h / windowRealWH) - 1) * windowRealWH) : windowRealWH;
+
+    // create our window and renderer
+    if (SDL_CreateWindowAndRenderer(winHeightWidth, winHeightWidth,
+            SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN,
+            &Window, &Renderer) != 0)
+    { // failed to create the window and the renderer
+        didInit = false;
+        goto EndProc;
+    }
+
+    // set the renderer's logical size to make scaling ez pz
+    if (SDL_RenderSetLogicalSize(Renderer, windowRealWH,windowRealWH) != 0)
+    {    // failed to set the logical size
+        didInit = false;
+        goto EndProc;
+    }  
+
+    // hide, set the title, then show and raise the attention to the user...
+    SDL_HideWindow(Window);
+    SDL_SetWindowTitle(Window, "Celeste Classic 2");
+    SDL_ShowWindow(Window);
+    SDL_RaiseWindow(Window);
+
+EndProc:
+    if (didInit == false)
+    {    // if we failed to initialize... log the reason
+        SDL_Log("%s", SDL_GetError());
+    }
+    return didInit;
+}
+
+static void InternalShutdownSDL()
+{
+    if (Renderer != NULL)
+        SDL_DestroyRenderer(Renderer);
+    if (Window != NULL)
+        SDL_DestroyWindow(Window);
+    SDL_Quit();
+}
+
+// some pre-defined P8 shit
+
 typedef struct _P8_Colour
 {
     uint8_t r, g, b;
@@ -55,7 +126,13 @@ static void ResetDrawState()
 
 int main(int argc, char** argv)
 {
+    if (InternalInitSDL() == true)
+    {
+        // if we initialized successfully, allow ourselves to continue
 
+        // only shutdown if initialization succeeded
+        InternalShutdownSDL();
+    }
     return 0;
 }
 
@@ -106,7 +183,7 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 1)
         { // coloured clear screen
-            
+
         }
 
         break;
