@@ -78,6 +78,18 @@ static void InternalShutdownSDL()
     SDL_Quit();
 }
 
+// p8 input state
+static uint8_t InputState = 0;
+
+static void InternalProcessInputSDL()
+{
+    SDL_Event ev;
+    while (SDL_PollEvent(&ev))
+    {
+
+    }
+}
+
 // some pre-defined P8 shit
 
 typedef struct _P8_Colour
@@ -124,11 +136,52 @@ static void ResetDrawState()
     ColourPicked = 0;
 }
 
+// p8 "system flag"
+enum {
+    P8_SYSTEMFLAG_NONE,
+    P8_SYSTEMFLAG_RESET,
+    P8_SYSTEMFLAG_SHUTDOWN
+};
+static int SystemFlag = P8_SYSTEMFLAG_NONE;
+inline void SetResetFlag() { SystemFlag = P8_SYSTEMFLAG_RESET; }
+inline void SetShutdownFlag() { SystemFlag = P8_SYSTEMFLAG_SHUTDOWN; }
+inline void ClearSystemFlag() { SystemFlag = P8_SYSTEMFLAG_NONE; }
+inline bool ContinueMainLoopBasedOnFlag() { 
+    return (SystemFlag != P8_SYSTEMFLAG_RESET && SystemFlag != P8_SYSTEMFLAG_SHUTDOWN) ?
+                true : false;
+}
+inline bool IsShutdownFlagSet() { return (SystemFlag == P8_SYSTEMFLAG_SHUTDOWN) ? 
+                                            true : false; }
+
+static bool InternalRunP8()
+{
+    bool ContinueRunning = true;
+
+    ClearSystemFlag();
+    ResetDrawState();
+
+    _P8_init(); // call application-defined init function
+    do {
+        InternalProcessInputSDL();
+        _P8_update();
+        _P8_draw();
+    } while (ContinueMainLoopBasedOnFlag() == true);
+
+    if (IsShutdownFlagSet() == true) // if we need to shutdown, we need to cut off
+        ContinueRunning = false;     // for good instead of just resetting
+
+    return ContinueRunning;
+}
+
 int main(int argc, char** argv)
 {
+    bool ContinueRunningP8 = true;
     if (InternalInitSDL() == true)
     {
         // if we initialized successfully, allow ourselves to continue
+        do {
+            ContinueRunningP8 = InternalRunP8();
+        } while (ContinueRunningP8 == true);
 
         // only shutdown if initialization succeeded
         InternalShutdownSDL();
@@ -138,7 +191,7 @@ int main(int argc, char** argv)
 
 void P8_Callback(int iCallback, int iArgCount, ...)
 {
-    uint8_t* dataPtr = (uint8_t*)0;
+    uint8_t* dataPtr = NULL;
 
     va_list Args;
     va_start(Args, iArgCount);
