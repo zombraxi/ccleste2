@@ -63,7 +63,7 @@ enum {
 // simply runs a VM operation
 extern void P8_Callback(int iCallback, int iArgCount, ...);
 
-inline void P8_LOADMAP(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADMAPDATA, 1, dataPtr);  }
+inline void P8_LOADMAPDATA(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADMAPDATA, 1, dataPtr);  }
 inline void P8_LOADATLASDATA(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADATLASDATA, 1, dataPtr); }
 inline void P8_LOADFLAGSDATA(const uint8_t* dataPtr) { P8_Callback(P8_CALLBACK_LOADFLAGSDATA, 1, dataPtr); }
 inline void P8_LOADSFXDATA(const char* fileNames[], int count) { P8_Callback(P8_CALLBACK_LOADSFXDATA, 2, fileNames, count); }

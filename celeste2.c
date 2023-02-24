@@ -27,6 +27,10 @@ CC2_CLOUD clouds[CC2_MAX_SNOW_CLOUDS];
 
 static void game_start()
 {
+    P8_LOADATLASDATA(CC2_ATLAS_DATA);
+    P8_LOADFLAGSDATA(CC2_FLAGS_DATA);
+    P8_LOADMAPDATA(CC2_MAP0_DATA);
+
     level_index = 0;
     level_intro = 0;
 
