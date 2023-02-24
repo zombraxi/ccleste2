@@ -705,6 +705,7 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
         {
             Context.Fget.n = va_arg(Args, int);
             Context.Fget.f = va_arg(Args, int);
+            // check in bounds
             if (Context.Fget.n >= 0 && Context.Fget.n < 128 &&
                     Context.Fget.f >= 0 && Context.Fget.f <= 7)
             {
@@ -723,11 +724,14 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
     case P8_CALLRESULT_MGET:
         if (iArgCount == 2)
         {
+            // context arguments
             Context.Mget.x = va_arg(Args, int);
             Context.Mget.y = va_arg(Args, int);
-            if (Context.Mget.x >= 0 && Context.Mget.x < 128 &&
-                    Context.Mget.y >= 0 && Context.Mget.y < 64)
+            // in bounds
+            if (Context.Mget.x >= 0 && Context.Mget.x < P8_MAP_WIDTH &&
+                    Context.Mget.y >= 0 && Context.Mget.y < P8_MAP_HEIGHT)
             {
+                // sprite that is there
                 Return = (int)MapData[(Context.Mget.y * P8_MAP_WIDTH) + Context.Mget.x];
             }
             else Return = 0;
@@ -744,3 +748,44 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
 
     return Return;
 }
+
+static uint32_t p8_m_high = 0xDEADBEEFU; // lol, dead beef are u kidding ?
+static uint32_t p8_m_low = 0x1234567U;
+
+// random number in range of "x"
+static uint32_t p8_rnd(uint32_t x)
+{
+	uint32_t ret = 0;
+	if (x != 0)
+	{
+		p8_m_high = (p8_m_high << 0x10 | p8_m_high >> 0x10) + p8_m_low;
+		p8_m_low = p8_m_low + p8_m_high;
+		ret = (uint32_t)p8_m_high % (uint32_t)x;
+	}
+	return ret;
+}
+
+// seed our random number generator
+static void p8_srand(uint32_t x) 
+{
+	if (x == 0) {
+		p8_m_high = (uint32_t)0x60009755U;
+		x = 0xdeadbeefU; // DEAD BEEF BABY!!!
+	}
+	else p8_m_high = x ^ 0xbead29baU; // not quite dead beef!
+	int32_t unk = 0x20L;
+	do {
+		p8_m_high = (p8_m_high << 0x10 | p8_m_high >> 0x10) + x;
+		x += p8_m_high;
+		unk -= 1;
+	} while (unk != 0);
+	p8_m_low = x;
+}
+
+float P8_RND(float x)
+{
+    uint32_t n = p8_rnd(x * (1 << 16));
+    return (float)n / (1 << 16);
+}
+
+#include <math.h>

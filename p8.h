@@ -130,6 +130,6 @@ inline int P8_FGET(int n, int f) { return P8_CallResult(P8_CALLRESULT_FGET, 2, n
 // Math, other operations that dont fit
 // the bill for being a Callback or CallResult
 
-inline float P8_RND(float x) { return 0.0f; }
+extern float P8_RND(float x);
 
 #endif
