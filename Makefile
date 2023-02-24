@@ -1,5 +1,5 @@
 SDL2_CONFIG=`sdl2-config --cflags`
-SDL2_STATIC=`sdl2-config --static-libs`
+SDL2_STATIC=`sdl2-config --static-libs` -lSDL2_mixer 
 
 COMPILER=gcc
 OUTPUT_NAME=cc2

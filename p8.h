@@ -15,6 +15,14 @@ extern void _P8_draw();
 // Math-based stuff is not considered a part of the "VM",
 // thus, excluded from CallResults... (like sin, cos, etc)
 
+#define P8_KEY_INVALID 6
+#define P8_KEY_LEFT 0
+#define P8_KEY_RIGHT 1
+#define P8_KEY_UP 2
+#define P8_KEY_DOWN 3
+#define P8_KEY_CZ 4
+#define P8_KEY_X 5
+
 // Callbacks...
 enum {
     P8_CALLBACK_NONE,
@@ -115,6 +123,9 @@ enum {
 // Call result is a VM operation which returns a value ( an int in this case )
 extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 
+inline int P8_BTN(int button) { return P8_CallResult(P8_CALLRESULT_BTN, 1, button); }
+inline int P8_MGET(int x, int y) { return P8_CallResult(P8_CALLRESULT_MGET, 2, x, y); }
+inline int P8_FGET(int n, int f) { return P8_CallResult(P8_CALLRESULT_FGET, 2, n, f); }
 
 // Math, other operations that dont fit
 // the bill for being a Callback or CallResult

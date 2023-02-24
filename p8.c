@@ -8,6 +8,19 @@
 
 // some pre-defined P8 stuff
 
+static uint8_t byte_single_on[ 8 ] = {
+		0x80,0x40,0x20,0x10,0x8,0x4,0x2,0x1
+	};
+static uint8_t byte_single_off[ 8 ] = {
+	0x80,0x40,0x20,0x10,0x8,0x4,0x2,0x1
+};
+static uint16_t short_single_on[ 16 ] = {
+	0x8000,0x4000,0x2000,0x1000,0x800,0x400,0x200,0x100,0x80,0x40,0x20,0x10,0x8,0x4,0x2,0x1
+};
+static uint16_t short_single_off[ 16 ] = {
+		0x7fff,0xbfff,0xdfff,0xefff,0xf7ff,0xfbff,0xfdff,0xfeff,0xff7f,0xffbf,0xffdf,0xffef,0xfff7,0xfffb,0xfffd,0xfffe
+};
+
 typedef struct _P8_VecI2
 {
     int x, y;
@@ -31,10 +44,12 @@ static const P8_Colour P8ColourPalette[16] = {
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
+#include <SDL_mixer.h>
 
 // SDL manage
 static SDL_Renderer* Renderer = NULL;
 static SDL_Window* Window = NULL;
+static bool InFullscreen = false;
 
 static bool InternalInitSDL()
 {
@@ -47,6 +62,19 @@ static bool InternalInitSDL()
     SDL_SetMainReady(); // ensure SDL_Init wont fail
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) != 0)
     { // if it fails
+        didInit = false;
+        goto EndProc;
+    }
+
+    int MixFlags = MIX_INIT_MP3 | MIX_INIT_OGG;
+    if (Mix_Init(MixFlags) != MixFlags)
+    { // failed because no flags were returned meaning
+        // none initialized
+        didInit = false;
+        goto EndProc;
+    }
+    if (Mix_OpenAudio(22050, AUDIO_S16SYS, 1, 1024) != 0)
+    {    // failed
         didInit = false;
         goto EndProc;
     }
@@ -94,6 +122,13 @@ EndProc:
 
 static void InternalShutdownSDL()
 {
+
+    // DESTROY ALL MIXER SHIT
+
+    Mix_CloseAudio();
+    Mix_Quit();
+
+    // DESTROY ALL SDL BASE SHIT
     if (Renderer != NULL)
         SDL_DestroyRenderer(Renderer);
     if (Window != NULL)
@@ -101,15 +136,48 @@ static void InternalShutdownSDL()
     SDL_Quit();
 }
 
+static void InternalFullscreenSDL()
+{
+    int Status = -1;
+    if (Window != NULL)
+    {
+        if (InFullscreen == true)
+        {
+            do { // unset the fullscreen and go back to windowed
+                Status = SDL_SetWindowFullscreen(Window, 0);
+            } while (Status != 0);
+            InFullscreen = false;
+        }
+        else {
+            do {
+                Status = SDL_SetWindowFullscreen(Window, SDL_WINDOW_FULLSCREEN);
+            } while (Status != 0);
+            InFullscreen = true;
+        }
+    }
+}
+
 // draw state
-static uint8_t AtlasData[8192];
-static uint8_t MapData[8192];
-static uint8_t FlagData[128];
-static uint16_t FillPattern;
-static bool FillPatternTransparency;
-static uint16_t Transparency;
-static int PaletteIndexTbl[16];
-static int ColourPicked;
+
+#define P8_MAP_WIDTH 128
+#define P8_MAP_HEIGHT 64
+#define P8_ATLAS_WIDTH 128
+#define P8_ATLAS_HEIGHT 64
+#define P8_MAP_LENGTH 8192
+#define P8_ATLAS_LENGTH 8192
+#define P8_MAX_SPRITES 128
+#define P8_PALETTE_SIZE 16
+
+#define TRANSPARENCY_REG_DEFAULT 0b1000000000000000
+
+static uint8_t AtlasData[P8_ATLAS_LENGTH];
+static uint8_t MapData[P8_MAP_LENGTH];
+static uint8_t FlagData[P8_MAX_SPRITES];
+static uint16_t FillPattern = 0b0000000000000000;
+static bool FillPatternTransparency = false;
+static uint16_t Transparency = TRANSPARENCY_REG_DEFAULT; // PaletteTransparency
+static int PaletteIndexTbl[P8_PALETTE_SIZE];
+static int ColourPicked = 0;
 static P8_VecI2 Camera;
 
 static void ResetClipRectSDL()
@@ -120,6 +188,27 @@ static void ResetClipRectSDL()
     clip_rect.w = 128;
     clip_rect.h = 128;
     SDL_RenderSetClipRect(Renderer, &clip_rect);
+}
+
+static void ResetDrawState()
+{
+    int i;
+    for (i = 0; i < 8192; i++)
+    {
+        AtlasData[i] = 0;
+        MapData[i] = 0;
+    }
+    for (i = 0; i < 128; i++)
+        FlagData[i] = 0;
+    FillPattern = 0x0;
+    FillPatternTransparency = false;
+    Transparency = TRANSPARENCY_REG_DEFAULT;
+    for (i = 0; i < 16; i++)
+        PaletteIndexTbl[i] = i;
+    ColourPicked = 0;
+    Camera.x = 0;
+    Camera.y = 0;
+    ResetClipRectSDL();    
 }
 
 static void SetClipRectSDL(int x, int y, int w, int h)
@@ -166,23 +255,12 @@ static void InternalClearScreenSDL(int c)
     ResetClipRectSDL();
 }
 
-static void ResetDrawState()
+static int IsFlagBitSet(int flag, int bit)
 {
-    int i;
-    for (i = 0; i < 8192; i++)
-    {
-        AtlasData[i] = 0;
-        MapData[i] = 0;
-    }
-    for (i = 0; i < 128; i++)
-        FlagData[i] = 0;
-    FillPattern = 0x0;
-    FillPatternTransparency = false;
-    Transparency = 0b1000000000000000;
-    for (i = 0; i < 16; i++)
-        PaletteIndexTbl[i] = i;
-    ColourPicked = 0;
-    ResetClipRectSDL();    
+    int ret = 0;
+    if (FlagData[flag] & byte_single_on[bit])
+        ret = 1;
+    return ret;
 }
 
 // p8 "system flag"
@@ -204,23 +282,133 @@ static bool IsShutdownFlagSet() { return (SystemFlag == P8_SYSTEMFLAG_SHUTDOWN) 
 
 // p8 input state
 static uint8_t InputState = 0;
+static void SetInputState(int bit)
+{
+    InputState |= byte_single_on[bit];
+}
+static void UnsetInputState(int bit)
+{
+    InputState &= byte_single_off[bit];
+}
+static int IsSetInputState(int bit)
+{
+    int ret = 0;
+    if (InputState & byte_single_on[bit])
+        ret = 1;
+    return ret;
+}
 static void ResetInputState() { InputState = 0; }
 
 static void InternalProcessInputSDL()
 {
     SDL_Event ev;
+    int set_me;
+    int unset_me;
     while (SDL_PollEvent(&ev) == 1)
     {
         switch (ev.type)
         {
         case SDL_KEYDOWN:
-            break;
+			if (ev.key.state == SDL_PRESSED && ev.key.repeat == 0) // pressed & not repeat
+			{
+				set_me = P8_KEY_INVALID;
+				unset_me = P8_KEY_INVALID;
+				
+				switch (ev.key.keysym.sym)
+				{
+				case SDLK_LEFT:
+					set_me = P8_KEY_LEFT;
+					unset_me = P8_KEY_RIGHT;
+					break;
+				case SDLK_RIGHT:
+					set_me = P8_KEY_RIGHT;
+					unset_me = P8_KEY_LEFT;
+					break;
+				case SDLK_UP:
+					set_me = P8_KEY_UP;
+					unset_me = P8_KEY_DOWN;
+					break;
+				case SDLK_DOWN:
+					set_me = P8_KEY_DOWN;
+					unset_me = P8_KEY_UP;
+					break;
 
-        case SDL_KEYUP:
-            break;
+				case SDLK_c:
+				case SDLK_z:
+					set_me = P8_KEY_CZ;
+					break;
+
+				case SDLK_x:
+					set_me = P8_KEY_X;
+					break;
+
+                case SDLK_r:
+                    SetResetFlag();
+                    break;
+
+                case SDLK_e:
+                    SetShutdownFlag();
+                    break;
+
+                case SDLK_f:
+                    InternalFullscreenSDL();
+                    break;
+				}
+
+				// now lock and modify if not invalid key
+
+				if (set_me != P8_KEY_INVALID)
+					SetInputState(set_me);
+				if (unset_me != P8_KEY_INVALID)
+					UnsetInputState(unset_me);
+
+			}
+			break;
+
+		case SDL_KEYUP:
+			if (ev.key.state == SDL_RELEASED && ev.key.repeat == 0) // released & not repeat
+			{
+				unset_me = P8_KEY_INVALID;
+				
+				switch (ev.key.keysym.sym)
+				{
+				case SDLK_LEFT:
+					unset_me = P8_KEY_LEFT;
+					break;
+				case SDLK_RIGHT:
+					unset_me = P8_KEY_RIGHT;
+					break;
+				case SDLK_UP:
+					unset_me = P8_KEY_UP;
+					break;
+				case SDLK_DOWN:
+					unset_me = P8_KEY_DOWN;
+					break;
+
+				case SDLK_c:
+				case SDLK_z:
+					unset_me = P8_KEY_CZ;
+					break;
+
+				case SDLK_x:
+					unset_me = P8_KEY_X;
+					break;
+				}
+
+				// now lock and modify if not invalid key
+
+				if (unset_me != P8_KEY_INVALID)
+					UnsetInputState(unset_me);
+
+			}
+			break;
+
         
         case SDL_QUIT:
             SetShutdownFlag();
+            break;
+
+        default:
             break;
         }
     }
@@ -255,6 +443,7 @@ int main(int argc, char** argv)
     {
         // if we initialized successfully, allow ourselves to continue
         do {
+            SDL_Log("Running P8...");
             ContinueRunningP8 = InternalRunP8();
         } while (ContinueRunningP8 == true);
 
@@ -465,7 +654,93 @@ void P8_Callback(int iCallback, int iArgCount, ...)
     case P8_CALLBACK_PALT: 
         break;
 
+    default:
+        break;
     }
 
+    va_end(Args);
+
     return;
+}
+
+int P8_CallResult(int iCallResult, int iArgCount, ...)
+{
+    int Return = 0;
+
+    va_list Args;
+    va_start(Args, iArgCount);
+
+    union {
+        struct {
+            int button;
+        } Btn;
+        struct {
+            int n, f;
+        } Fget;
+        struct {
+            int x, y;
+        } Mget;
+    } Context;
+
+    switch (iCallResult)
+    {
+    case P8_CALLRESULT_BTN:
+        if (iArgCount == 1)
+        {
+            Context.Btn.button = va_arg(Args, int);
+            if (Context.Btn.button >= 0 && Context.Btn.button <= 5)
+            {
+                if (IsSetInputState(Context.Btn.button) == 1)
+                    Return = 1;
+                else Return = 0;
+            }
+            else Return = 0;
+        }
+        else Return = 0;
+
+        break;
+
+    case P8_CALLRESULT_FGET:
+        if (iArgCount == 2)
+        {
+            Context.Fget.n = va_arg(Args, int);
+            Context.Fget.f = va_arg(Args, int);
+            if (Context.Fget.n >= 0 && Context.Fget.n < 128 &&
+                    Context.Fget.f >= 0 && Context.Fget.f <= 7)
+            {
+                if (IsFlagBitSet(Context.Fget.n, Context.Fget.f) == 1)
+                {
+                    Return = 1;
+                }
+                else Return = 0;
+            }
+            else Return = 0;
+        }
+        else Return = 0;
+
+        break;
+
+    case P8_CALLRESULT_MGET:
+        if (iArgCount == 2)
+        {
+            Context.Mget.x = va_arg(Args, int);
+            Context.Mget.y = va_arg(Args, int);
+            if (Context.Mget.x >= 0 && Context.Mget.x < 128 &&
+                    Context.Mget.y >= 0 && Context.Mget.y < 64)
+            {
+                Return = (int)MapData[(Context.Mget.y * P8_MAP_WIDTH) + Context.Mget.x];
+            }
+            else Return = 0;
+        }
+        else Return = 0;
+
+        break;
+
+    default:
+        break;
+    }
+
+    va_end(Args);
+
+    return Return;
 }
