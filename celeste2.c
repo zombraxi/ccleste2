@@ -23,8 +23,13 @@ int infade = 0;
 CC2_SNOW snow[CC2_MAX_SNOW_CLOUDS];
 CC2_CLOUD clouds[CC2_MAX_SNOW_CLOUDS];
 
+#include "gamedata.h"
+
 static void game_start()
 {
+    level_index = 0;
+    level_intro = 0;
+
     memset(snow, 0, sizeof(CC2_SNOW) * CC2_MAX_SNOW_CLOUDS);
     memset(clouds, 0, sizeof(CC2_CLOUD) * CC2_MAX_SNOW_CLOUDS);
 
