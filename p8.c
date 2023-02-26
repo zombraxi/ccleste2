@@ -169,11 +169,18 @@ static void InternalFullscreenSDL()
 #define P8_PALETTE_SIZE 16
 
 #define TRANSPARENCY_REG_DEFAULT 0b1000000000000000
+#define FILLPATTERN_REG_DEFAULT 0b0000000000000000
+#define FILLPATTERN_4x4_LENGTH 16
 
 static uint8_t AtlasData[P8_ATLAS_LENGTH];
 static uint8_t MapData[P8_MAP_LENGTH];
 static uint8_t FlagData[P8_MAX_SPRITES];
-static uint16_t FillPattern = 0b0000000000000000;
+static uint16_t FillPattern = FILLPATTERN_REG_DEFAULT; // before becoming a 4x4 square
+static uint8_t FillPattern4x4[FILLPATTERN_4x4_LENGTH]; // represents a 4x4 square
+                                                        // if 1... draw that color...
+                                                        // of 0... dont draw it
+                                                        // atleast, depending on the
+                                                        // fillPatternTransparency
 static bool FillPatternTransparency = false;
 static uint16_t Transparency = TRANSPARENCY_REG_DEFAULT; // PaletteTransparency
 static int PaletteIndexTbl[P8_PALETTE_SIZE];
@@ -190,6 +197,44 @@ static void ResetClipRectSDL()
     SDL_RenderSetClipRect(Renderer, &clip_rect);
 }
 
+static void ResetVirtPalette()
+{
+    int i = 0;
+    for (; i < P8_PALETTE_SIZE; i++)
+    {
+        PaletteIndexTbl[i] = i;
+    }
+}
+
+static void SwapVirtPalette()
+{
+
+}
+
+static void ResetFillPattern()
+{
+    FillPattern = 0;
+    FillPatternTransparency = false;
+
+    int i;
+    for (i = 0; i < FILLPATTERN_4x4_LENGTH; i++)
+    {
+        FillPattern4x4[i] = 0;
+    }
+}
+
+static void SetFillPattern(uint16_t bits, bool trans)
+{
+    FillPattern = bits;
+    FillPatternTransparency = trans;
+
+    int i;
+    for (i = 0; i < FILLPATTERN_4x4_LENGTH; i++)
+    {
+        FillPattern4x4[i] = (bits & short_single_on[i]) ? 1 : 0;
+    }
+}
+
 static void ResetDrawState()
 {
     int i;
@@ -200,8 +245,7 @@ static void ResetDrawState()
     }
     for (i = 0; i < 128; i++)
         FlagData[i] = 0;
-    FillPattern = 0x0;
-    FillPatternTransparency = false;
+    ResetFillPattern();
     Transparency = TRANSPARENCY_REG_DEFAULT;
     for (i = 0; i < 16; i++)
         PaletteIndexTbl[i] = i;
@@ -646,9 +690,52 @@ void P8_Callback(int iCallback, int iArgCount, ...)
 
     // modify some special draw state
     case P8_CALLBACK_FILLP: 
+        if (iArgCount == 0)
+        {
+            ResetFillPattern();
+        }
+        else if (iArgCount == 1)
+        {
+            Context.Fillp.pattern = va_arg(Args, uint16_t);
+            Context.Fillp.useTransparency = false;
+            
+            if (Context.Fillp.pattern != 0)
+            {
+                SetFillPattern(Context.Fillp.pattern, Context.Fillp.useTransparency);
+            }
+            else ResetFillPattern();
+        }
+        else if (iArgCount == 2)
+        {
+            Context.Fillp.pattern = va_arg(Args,uint16_t);
+            Context.Fillp.useTransparency = va_arg(Args, bool);
+
+            if (Context.Fillp.pattern != 0)
+            {
+                SetFillPattern(Context.Fillp.pattern, Context.Fillp.useTransparency);
+            }
+            else ResetFillPattern();
+        }
         break;
 
     case P8_CALLBACK_PAL: 
+        if (iArgCount == 0)
+        {
+            ResetVirtPalette();
+        }
+        else if (iArgCount == 2)
+        {
+            Context.Pal.c0 = va_arg(Args, int);
+            Context.Pal.c1 = va_arg(Args, int);
+
+            SwapVirtPalette(Context.Pal.c0, Context.Pal.c1);
+        }
+        else if (iArgCount == 3)
+        {
+            Context.Pal.c0 = va_arg(Args, int);
+            Context.Pal.c1 = va_arg(Args, int);
+            Context.Pal.p = va_arg(Args, int);
+        }
         break;
 
     case P8_CALLBACK_PALT: 
