@@ -223,10 +223,10 @@ static void ResetFillPattern()
     }
 }
 
-static void SetFillPattern(uint16_t bits, bool trans)
+static void SetFillPattern(uint16_t bits, int trans)
 {
     FillPattern = bits;
-    FillPatternTransparency = trans;
+    FillPatternTransparency = (trans != 0) ? true : false;
 
     int i;
     for (i = 0; i < FILLPATTERN_4x4_LENGTH; i++)
@@ -557,7 +557,7 @@ void P8_Callback(int iCallback, int iArgCount, ...)
 
         struct {
             uint16_t pattern;
-            bool useTransparency;
+            int useTransparency;
         } Fillp;
 
         struct {
@@ -696,8 +696,8 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 1)
         {
-            Context.Fillp.pattern = va_arg(Args, uint16_t);
-            Context.Fillp.useTransparency = false;
+            Context.Fillp.pattern = (uint16_t)va_arg(Args, int);
+            Context.Fillp.useTransparency = 0;
             
             if (Context.Fillp.pattern != 0)
             {
@@ -707,8 +707,8 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 2)
         {
-            Context.Fillp.pattern = va_arg(Args,uint16_t);
-            Context.Fillp.useTransparency = va_arg(Args, bool);
+            Context.Fillp.pattern = (uint16_t)va_arg(Args, int);
+            Context.Fillp.useTransparency = va_arg(Args, int);
 
             if (Context.Fillp.pattern != 0)
             {
