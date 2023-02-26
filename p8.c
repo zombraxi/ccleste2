@@ -458,6 +458,11 @@ static void InternalProcessInputSDL()
     }
 }
 
+static void Tick()
+{
+
+}
+
 static bool InternalRunP8()
 {
     bool ContinueRunning = true;
@@ -472,6 +477,7 @@ static bool InternalRunP8()
         _P8_update();
         _P8_draw();
         InternalFlipSDL();
+        Tick();
     } while (ContinueMainLoopBasedOnFlag() == true);
 
     if (IsShutdownFlagSet() == true) // if we need to shutdown, we need to cut off
