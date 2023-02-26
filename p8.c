@@ -206,9 +206,9 @@ static void ResetVirtPalette()
     }
 }
 
-static void SwapVirtPalette()
+static void SwapVirtPalette(int c0, int c1)
 {
-
+    PaletteIndexTbl[c0] = PaletteIndexTbl[c1];
 }
 
 static void ResetFillPattern()
