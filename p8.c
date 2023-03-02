@@ -197,6 +197,25 @@ static void ResetClipRectSDL()
     SDL_RenderSetClipRect(Renderer, &clip_rect);
 }
 
+    
+static void ResetPaletteTransparency()
+{
+    Transparency = TRANSPARENCY_REG_DEFAULT;
+}
+
+static void SetPaletteTransparencyBits(uint16_t bits)
+{
+    Transparency = bits;
+}
+
+static void SetPaletteTransparencyBit(int bit, bool trans)
+{
+    if (trans == true)
+        Transparency |= short_single_on[bit];
+    else Transparency &= short_single_off[bit];
+    //(trans == true) ? (Transparency |= short_single_on[bit]) : (Transparency &= short_single_off[bit]);
+} 
+
 static void ResetVirtPalette()
 {
     int i = 0;
@@ -745,6 +764,21 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         break;
 
     case P8_CALLBACK_PALT: 
+        if (iArgCount == 0)
+        {
+            ResetPaletteTransparency();
+        }
+        else if (iArgCount == 1)
+        {
+            Context.Palt.bits = (uint16_t)va_arg(Args, int);
+            SetPaletteTransparencyBits(Context.Palt.bits);
+        }
+        else if (iArgCount == 2)
+        {
+            Context.Palt.c = va_arg(Args, int);
+            Context.Palt.t = (va_arg(Args, int) == 1) ? true : false;
+            SetPaletteTransparencyBit(Context.Palt.c, Context.Palt.t);
+        }
         break;
 
     default:
