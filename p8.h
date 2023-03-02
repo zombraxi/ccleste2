@@ -113,6 +113,18 @@ inline void P8_MUSIC(int n) { P8_Callback(P8_CALLBACK_MUSIC, 1, n); }
 inline void P8_MUSIC2(int n, int fade_len) { P8_Callback(P8_CALLBACK_MUSIC, 2, n, fade_len); }
 inline void P8_MUSIC3(int n, int fade_len, int channel_mask) { P8_Callback(P8_CALLBACK_MUSIC, 3, n, fade_len, channel_mask); }
 
+inline void P8_FILLP() { P8_Callback(P8_CALLBACK_FILLP, 0); }
+inline void P8_FILLP2(uint16_t pat) { P8_Callback(P8_CALLBACK_FILLP, 1, (int)pat);  }
+inline void P8_FILLP3(uint16_t pat, bool trans) { P8_Callback(P8_CALLBACK_FILLP, 2, (int)pat, (trans == true) ? 1 : 0); }
+
+inline void P8_PAL() { P8_Callback(P8_CALLBACK_PAL, 0); }
+inline void P8_PAL2(int c0, int c1) { P8_Callback(P8_CALLBACK_PAL, 2, c0, c1); }
+inline void P8_PAL3(int c0, int c1, int p) { P8_Callback(P8_CALLBACK_PAL, 3, c0, c1, p); }
+
+inline void P8_PALT() { P8_Callback(P8_CALLBACK_PALT, 0); }
+inline void P8_PALT1(uint16_t pat) { P8_Callback(P8_CALLBACK_PALT, 1, (int)pat); }
+inline void P8_PALT2(int c, bool t) { P8_Callback(P8_CALLBACK_PALT, 2, c, (t == true) ? 1 : 0); }
+
 // Call Results...
 enum {
     P8_CALLRESULT_MGET,
