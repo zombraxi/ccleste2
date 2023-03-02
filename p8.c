@@ -329,7 +329,7 @@ static int GetColour()
     return ColourPicked;
 }
 
-static void ResetCoreData()
+static void ResetCoreDrawData()
 {
     int i = 0;
     for (i = 0; i < 8192; i++)
@@ -343,7 +343,7 @@ static void ResetCoreData()
 
 static void ResetDrawState()
 {
-    ResetCoreData();
+    ResetCoreDrawData();
     ResetColour();
     ResetCamera();
     ResetFillPattern();
