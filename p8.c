@@ -329,9 +329,9 @@ static int GetColour()
     return ColourPicked;
 }
 
-static void ResetDrawState()
+static void ResetCoreData()
 {
-    int i;
+    int i = 0;
     for (i = 0; i < 8192; i++)
     {
         AtlasData[i] = 0;
@@ -339,6 +339,11 @@ static void ResetDrawState()
     }
     for (i = 0; i < 128; i++)
         FlagData[i] = 0;
+}
+
+static void ResetDrawState()
+{
+    ResetCoreData();
     ResetColour();
     ResetCamera();
     ResetFillPattern();
