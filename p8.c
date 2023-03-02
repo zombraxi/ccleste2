@@ -190,6 +190,7 @@ static bool FillPatternTransparency = false;
 static uint16_t Transparency = TRANSPARENCY_REG_DEFAULT; // PaletteTransparency
 static int PaletteIndexTbl[P8_PALETTE_SIZE];
 static int ColourPicked = 0;
+static P8_Colour ColourPickedRGB;
 static P8_VecI2 Camera;
 static P8_VecI4 ClippingRegion;
 
@@ -307,6 +308,27 @@ static void SetFillPattern(uint16_t bits, int trans)
     }
 }
 
+static void ResetColour()
+{
+    ColourPicked = 6;
+    ColourPickedRGB = P8ColourPalette[PaletteIndexTbl[6]]
+    SDL_SetRenderDrawColor(Renderer, 
+        ColourPickedRGB.r, ColourPickedRGB.g, ColourPickedRGB.b, 255);
+}
+
+static void SetColour(int c)
+{
+    ColourPicked = c;
+    ColourPickedRGB = P8ColourPalette[PaletteIndexTbl[c]];
+    SDL_SetRenderDrawColor(Renderer, 
+        ColourPickedRGB.r, ColourPickedRGB.g, ColourPickedRGB.b, 255);
+}
+
+static int GetColour()
+{
+    return ColourPicked;
+}
+
 static void ResetDrawState()
 {
     int i;
@@ -317,14 +339,12 @@ static void ResetDrawState()
     }
     for (i = 0; i < 128; i++)
         FlagData[i] = 0;
+    ResetColour();
+    ResetCamera();
     ResetFillPattern();
-    Transparency = TRANSPARENCY_REG_DEFAULT;
-    for (i = 0; i < 16; i++)
-        PaletteIndexTbl[i] = i;
-    ColourPicked = 0;
-    Camera.x = 0;
-    Camera.y = 0;
-    ResetClipRectSDL();    
+    ResetClippingRegion();
+    ResetVirtPalette();  
+    ResetPaletteTransparency();
 }
 
 static void InternalFlipSDL()
@@ -718,16 +738,12 @@ void P8_Callback(int iCallback, int iArgCount, ...)
     case P8_CALLBACK_COLOR:
         if (iArgCount == 0) // if no arguments, sets color to 6
         {
-            ColourPicked = 6;
-            colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
-            SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
+            ResetColour();
         }
         else if (iArgCount == 1)
         {
             Context.Color.colour = va_arg(Args, int);
-            ColourPicked = Context.Color.colour;
-            colour = P8ColourPalette[PaletteIndexTbl[ColourPicked]];
-            SDL_SetRenderDrawColor(Renderer, colour.r, colour.g, colour.b, 255);
+            SetColour(Context.Color.colour);
         }
         break;
 
