@@ -26,6 +26,11 @@ typedef struct _P8_VecI2
     int x, y;
 } P8_VecI2;
 
+typedef struct _P8_VecI4
+{
+    int x, y, w, h;
+} P8_VecI4;
+
 typedef struct _P8_Colour
 {
     uint8_t r, g, b;
@@ -186,6 +191,7 @@ static uint16_t Transparency = TRANSPARENCY_REG_DEFAULT; // PaletteTransparency
 static int PaletteIndexTbl[P8_PALETTE_SIZE];
 static int ColourPicked = 0;
 static P8_VecI2 Camera;
+static P8_VecI4 ClippingRegion;
 
 static void ResetClipRectSDL()
 {
@@ -197,6 +203,53 @@ static void ResetClipRectSDL()
     SDL_RenderSetClipRect(Renderer, &clip_rect);
 }
 
+static void SetClipRectSDL(int x, int y, int w, int h)
+{
+    SDL_Rect clip_rect;
+    clip_rect.x = x;
+    clip_rect.y = y;
+    clip_rect.w = w;
+    clip_rect.h = h;
+    SDL_RenderSetClipRect(Renderer, &clip_rect);
+}
+
+static void ResetClippingRegion()
+{
+    ClippingRegion.x = 0;
+    ClippingRegion.y = 0;
+    ClippingRegion.w = 128;
+    ClippingRegion.h = 128;
+    ResetClipRectSDL();
+}
+
+static void SetClippingRegion(int x, int y, int w, int h, bool clip_previous)
+{
+    if (clip_previous == false)
+    { // dont clip by previous
+        ClippingRegion.x = x;
+        ClippingRegion.y = y;
+        ClippingRegion.w = w;
+        ClippingRegion.h = h;
+        SetClipRectSDL(ClippingRegion.x,
+                        ClippingRegion.y,
+                        ClippingRegion.w,
+                        ClippingRegion.h);
+    }
+}
+
+static void ResetCamera()
+{
+    Camera.x = 0;
+    Camera.y = 0;
+}
+
+// camera position should be used as a offset,
+// subtracted from position
+static void SetCameraXY(int x, int y)
+{
+    Camera.x = x;
+    Camera.y = y;
+}
     
 static void ResetPaletteTransparency()
 {
@@ -272,16 +325,6 @@ static void ResetDrawState()
     Camera.x = 0;
     Camera.y = 0;
     ResetClipRectSDL();    
-}
-
-static void SetClipRectSDL(int x, int y, int w, int h)
-{
-    SDL_Rect clip_rect;
-    clip_rect.x = x;
-    clip_rect.y = y;
-    clip_rect.w = w;
-    clip_rect.h = h;
-    SDL_RenderSetClipRect(Renderer, &clip_rect);
 }
 
 static void InternalFlipSDL()
@@ -595,6 +638,15 @@ void P8_Callback(int iCallback, int iArgCount, ...)
             int c0, c1, p;
         } Pal;
 
+        struct {
+            int x, y;
+        } Camera;
+
+        struct {
+            int x, y, w, h;
+            bool clip_previous;
+        } Clip;
+
     } Context;
 
     P8_Colour colour;
@@ -778,6 +830,46 @@ void P8_Callback(int iCallback, int iArgCount, ...)
             Context.Palt.c = va_arg(Args, int);
             Context.Palt.t = (va_arg(Args, int) == 1) ? true : false;
             SetPaletteTransparencyBit(Context.Palt.c, Context.Palt.t);
+        }
+        break;
+
+    case P8_CALLBACK_CAMERA:
+        if (iArgCount == 0)
+        {
+            ResetCamera();
+        }
+        else if (iArgCount == 2)
+        {
+            Context.Camera.x = va_arg(Args, int);
+            Context.Camera.y = va_arg(Args, int);
+            SetCameraXY(Context.Camera.x, Context.Camera.y);
+        }
+        break;
+
+    case P8_CALLBACK_CLIP:
+        if (iArgCount == 0)
+        {
+            ResetClippingRegion();
+        }
+        else if (iArgCount == 4)
+        {
+            Context.Clip.x = va_arg(Args, int);
+            Context.Clip.y = va_arg(Args, int);
+            Context.Clip.w = va_arg(Args, int);
+            Context.Clip.h = va_arg(Args, int);
+            SetClippingRegion(Context.Clip.x, Context.Clip.y, 
+                              Context.Clip.w, Context.Clip.h, false);
+        }
+        else if (iArgCount == 5)
+        {
+            Context.Clip.x = va_arg(Args, int);
+            Context.Clip.y = va_arg(Args, int);
+            Context.Clip.w = va_arg(Args, int);
+            Context.Clip.h = va_arg(Args, int);
+            Context.Clip.clip_previous = (va_arg(Args, int) == 1) ? true : false;
+            SetClippingRegion(Context.Clip.x, Context.Clip.y, 
+                              Context.Clip.w, Context.Clip.h,
+                              Context.Clip.clip_previous); 
         }
         break;
 

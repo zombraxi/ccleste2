@@ -125,6 +125,13 @@ inline void P8_PALT() { P8_Callback(P8_CALLBACK_PALT, 0); }
 inline void P8_PALT1(uint16_t pat) { P8_Callback(P8_CALLBACK_PALT, 1, (int)pat); }
 inline void P8_PALT2(int c, bool t) { P8_Callback(P8_CALLBACK_PALT, 2, c, (t == true) ? 1 : 0); }
 
+inline void P8_CAMERA() { P8_Callback(P8_CALLBACK_CAMERA, 0); }
+inline void P8_CAMERA2(int x, int y) { P8_Callback(P8_CALLBACK_CAMERA, 2, x, y); }
+
+inline void P8_CLIP() { P8_Callback(P8_CALLBACK_CLIP, 0); }
+inline void P8_CLIP2(int x, int y, int w, int h) { P8_Callback(P8_CALLBACK_CLIP, 4, x, y, w, h); }
+inline void P8_CLIP3(int x, int y, int w, int h, bool clip_previous) { P8_Callback(P8_CALLBACK_CLIP, 5, x, y, w, h, (clip_previous == true) ? 1 : 0); }
+
 // Call Results...
 enum {
     P8_CALLRESULT_MGET,
