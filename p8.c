@@ -344,12 +344,13 @@ static void ResetCoreDrawData()
 static void ResetDrawState()
 {
     ResetCoreDrawData();
-    ResetColour();
-    ResetCamera();
     ResetFillPattern();
     ResetClippingRegion();
     ResetVirtPalette();  
     ResetPaletteTransparency();
+    ResetColour(); // reset colour after virt palette because 
+                    // the palette needs to properly reset as well...
+    ResetCamera();
 }
 
 static void InternalFlipSDL()
