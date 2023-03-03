@@ -311,7 +311,7 @@ static void SetFillPattern(uint16_t bits, int trans)
 static void ResetColour()
 {
     ColourPicked = 6;
-    ColourPickedRGB = P8ColourPalette[PaletteIndexTbl[6]]
+    ColourPickedRGB = P8ColourPalette[PaletteIndexTbl[6]];
     SDL_SetRenderDrawColor(Renderer, 
         ColourPickedRGB.r, ColourPickedRGB.g, ColourPickedRGB.b, 255);
 }

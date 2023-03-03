@@ -66,9 +66,12 @@ void psfx(int id, int off, int len, int lock);
 // inline-able functions
 inline float approach(float x, float target, float max_delta)
 {
-    if (x < target) return P8_MIN_FLOAT(x + max_delta, target);
+    /*if (x < target) return P8_MIN_FLOAT(x + max_delta, target);
     // else...
-    return P8_MAX_FLOAT(x - max_delta, target);
+    return P8_MAX_FLOAT(x - max_delta, target);*/
+
+    return (x < target) ? P8_MIN_FLOAT(x + max_delta, target) : 
+                            P8_MAX_FLOAT(x - max_delta, target);
 }
 
 #endif

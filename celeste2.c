@@ -57,6 +57,7 @@ static void game_start()
     // "gamestart" routine 
 
     infade = 0;
+    ResetCC2Objects();
 
     int i;
     CC2_SNOW* s = NULL;
@@ -126,7 +127,7 @@ void _P8_update()
                                 // a special sound effect is played
     {
         level_intro -= 1;
-        if (level_intro == 0) psfx(17, 24, 9);
+        if (level_intro == 0) psfx(17, 24, 9, 0);
     }
 
     // normal level
@@ -135,7 +136,7 @@ void _P8_update()
         // update timers
         sfx_timer = P8_MAX_INT(sfx_timer - 1, 0);
         shake = P8_MAX_INT(shake - 1, 0);
-        infade = min(infade + 1, 60);
+        infade = P8_MIN_INT(infade + 1, 60);
         if (level_index != 8) frames += 1;
         if (frames == 30) {
             seconds += 1;
@@ -216,7 +217,7 @@ void draw_snow()
     {
         s = snow[i];
         P8_CIRCFILL2(camera_x + (int)(s.x - camera_x * 0.5f) % 132 - 2,
-            camera_y + (s.y - camera_y * 0.5f) % 132,
+            camera_y + (int)(s.y - camera_y * 0.5f) % 132,
             i % 2,
             7);
         s.x += (4 - i % 4);

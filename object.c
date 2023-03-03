@@ -3,8 +3,11 @@
 #include <stdlib.h>
 #include <memory.h>
 
-CC2_OBJECT objects[CC2_MAX_OBJECTS_COUNT];
-int types[128];
+CC2_OBJECT objects[CC2_MAX_OBJECTS_COUNT] = { };
+
+int types[128] = { 
+
+};
 
 void ResetCC2Objects()
 {
