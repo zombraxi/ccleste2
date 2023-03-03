@@ -149,7 +149,7 @@ extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 inline int P8_BTN(int button) { return P8_CallResult(P8_CALLRESULT_BTN, 1, button); }
 inline int P8_MGET(int x, int y) { return P8_CallResult(P8_CALLRESULT_MGET, 2, x, y); }
 inline int P8_FGET(int n, int f) { return P8_CallResult(P8_CALLRESULT_FGET, 2, n, f); }
-inline int P8_TIME() { return P8_Callback(P8_CALLRESULT_TIME, 0); }
+inline int P8_TIME() { return P8_CallResult(P8_CALLRESULT_TIME, 0); }
 
 // Math, other operations that dont fit
 // the bill for being a Callback or CallResult

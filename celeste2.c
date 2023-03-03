@@ -1,4 +1,5 @@
 #include "celeste2.h"
+#include "object.h"
 
 int level_index = 0;
 int level_intro = 0;
@@ -95,7 +96,7 @@ void draw_sine(float x0, float x1, float y, int col, float ampltiude,
 
 void _P8_update()
 {
-    CC2_Object* o = NULL;
+    CC2_OBJECT* o = NULL;
     int i = 0;
 
     // titlescreen
@@ -151,17 +152,16 @@ void _P8_update()
         if (freeze_time > 0)
             freeze_time -= 1;
         else { // update game objects
-            CC2_Object* o = (CC2Object*)objects;
-            for ( i = 0; i < MAX_OBJECTS_COUNT; i++)
+            for ( i = 0; i < CC2_MAX_OBJECTS_COUNT; i++)
             {
-                o = ((CC2_Object*)objects + i);
+                o = ((CC2_OBJECT*)objects + i);
                 if (o->freeze > 0)
                     o->freeze -= 1;
-                else {
-                    o->update();
+                else if (o->bActive == true) {
+                    o->update(o);
                 }
 
-                if (o->destroyed)
+                if (o->bDestroyed == true)
                     DeleteCC2Object(o);
             }
         }  
