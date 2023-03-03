@@ -137,7 +137,11 @@ enum {
     P8_CALLRESULT_MGET,
     P8_CALLRESULT_FGET,
     P8_CALLRESULT_BTN,
+    P8_CALLRESULT_TIME,
 };
+
+#define CR_TRUE (int)1
+#define CR_FALSE (int)0
 
 // Call result is a VM operation which returns a value ( an int in this case )
 extern int P8_CallResult(int iCallResult, int iArgCount, ...);
@@ -145,10 +149,17 @@ extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 inline int P8_BTN(int button) { return P8_CallResult(P8_CALLRESULT_BTN, 1, button); }
 inline int P8_MGET(int x, int y) { return P8_CallResult(P8_CALLRESULT_MGET, 2, x, y); }
 inline int P8_FGET(int n, int f) { return P8_CallResult(P8_CALLRESULT_FGET, 2, n, f); }
+inline int P8_TIME() { return P8_Callback(P8_CALLRESULT_TIME, 0); }
 
 // Math, other operations that dont fit
 // the bill for being a Callback or CallResult
 
 extern float P8_RND(float x);
+extern float P8_SIN(float x);
+
+inline int P8_MAX_INT(int a, int b) { return (a > b) ? a : b; }
+inline int P8_MIN_INT(int a, int b) { return (a < b) ? a : b; }
+inline float P8_MAX_FLOAT(float a, float b) { return (a > b) ? a : b; }
+inline float P8_MIN_FLOAT(float a, float b) { return (a < b) ? a : b; }
 
 #endif
