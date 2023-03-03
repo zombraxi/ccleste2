@@ -14,7 +14,7 @@ void ResetCC2Objects()
     // nullify the entire objects
     int i;
     CC2_OBJECT* o;
-    for (i = 0 ; i < CC2_MAX_OBJECTS_COUNT)
+    for (i = 0 ; i < CC2_MAX_OBJECTS_COUNT; i++)
     {
         o = (CC2_OBJECT*)objects + i;
         DeleteCC2Object(o);
@@ -23,7 +23,7 @@ void ResetCC2Objects()
 
 CC2_OBJECT* CreateCC2Object(int type, int x, int y)
 {
-
+    return NULL;
 }
 
 void DeleteCC2Object(CC2_OBJECT* obj)

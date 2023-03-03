@@ -49,7 +49,7 @@ typedef struct _CC2_OBJECT
 extern CC2_OBJECT objects[CC2_MAX_OBJECTS_COUNT];
 extern int types[128];
 
-inline int id(int tx, int ty) { return level_index * 100 + tx + ty * 128; }
+inline int id(int tx, int ty) { return (level_index * 100 + tx + ty * 128); }
 
 extern void ResetCC2Objects();
 extern CC2_OBJECT* CreateCC2Object(int type, int x, int y);

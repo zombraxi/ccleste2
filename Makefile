@@ -4,9 +4,9 @@ SDL2_DYN=`sdl2-config --libs` -lSDL2_mixer
 
 COMPILER=gcc
 OUTPUT_NAME=cc2
-SOURCE_FILES=celeste2.c p8.c
+SOURCE_FILES=celeste2.c p8.c object.c input.c
 
-all: $(SOURCE_FILES) p8.h celeste2.h gamedata.h
+all: $(SOURCE_FILES) p8.h celeste2.h gamedata.h input.h object.h
 	$(COMPILER) $(SOURCE_FILES) -O2 -g -o $(OUTPUT_NAME) $(SDL2_CONFIG) $(SDL2_DYN)
 
 static: $(SOURCE_FILES) p8.h celeste2.h gamedata.h
