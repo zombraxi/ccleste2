@@ -8,6 +8,8 @@
 
 #include "p8.h"
 
+extern bool standalone;
+
 typedef struct _CC2_SNOW
 {
     float x, y;

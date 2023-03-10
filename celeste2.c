@@ -2,6 +2,8 @@
 #include "object.h"
 #include "input.h"
 
+bool standalone = false;
+
 int level_index = 0;
 int level_intro = 0;
 
