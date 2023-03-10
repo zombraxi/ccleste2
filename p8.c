@@ -795,7 +795,7 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 1)
         {
-            Context.Fillp.pattern = (uint16_t)va_arg(Args, int);
+            Context.Fillp.pattern = (uint16_t) (va_arg(Args, int) & 0xffff);
             Context.Fillp.useTransparency = 0;
             
             if (Context.Fillp.pattern != 0)
@@ -806,8 +806,8 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 2)
         {
-            Context.Fillp.pattern = (uint16_t)va_arg(Args, int);
-            Context.Fillp.useTransparency = va_arg(Args, int);
+            Context.Fillp.pattern = (uint16_t) (va_arg(Args, int) & 0xffff);
+            Context.Fillp.useTransparency = va_arg(Args, int) & 0x1;
 
             if (Context.Fillp.pattern != 0)
             {
@@ -844,7 +844,7 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         else if (iArgCount == 1)
         {
-            Context.Palt.bits = (uint16_t)va_arg(Args, int);
+            Context.Palt.bits = (uint16_t) (va_arg(Args, int) & 0xffff);
             SetPaletteTransparencyBits(Context.Palt.bits);
         }
         else if (iArgCount == 2)
@@ -921,6 +921,12 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
         struct {
             int x, y;
         } Mget;
+        struct {
+            int addr;
+        } Peek;
+        struct {
+            int addr, val;
+        } Poke;
     } Context;
 
     switch (iCallResult)
@@ -944,7 +950,7 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
     case P8_CALLRESULT_FGET:
         if (iArgCount == 2)
         {
-            Context.Fget.n = va_arg(Args, int);
+            Context.Fget.n = va_arg(Args, int) & 0xff;
             Context.Fget.f = va_arg(Args, int);
             // check in bounds
             if (Context.Fget.n >= 0 && Context.Fget.n < 128 &&
@@ -973,13 +979,90 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
                     Context.Mget.y >= 0 && Context.Mget.y < P8_MAP_HEIGHT)
             {
                 // sprite that is there
-                Return = (int)MapData[(Context.Mget.y * P8_MAP_WIDTH) + Context.Mget.x];
+                Return = (int)MapData[(Context.Mget.y * P8_MAP_WIDTH) + Context.Mget.x] & 0xff;
             }
             else Return = 0;
         }
         else Return = 0;
 
         break;
+
+    case P8_CALLRESULT_PEEK: 
+        if (iArgCount == 1)
+        {
+            Context.Peek.addr = va_arg(Args, int) & 0xffff;
+            switch (Context.Peek.addr)
+            {
+            case 0x5f28: // camera x
+                Return = Camera.x & 0xff;
+                break;
+
+            case 0x5f2a: // camera y
+                Return = Camera.y & 0xff;
+                break;
+
+            default: break;
+            }
+        }
+        break;
+    case P8_CALLRESULT_POKE: 
+        if (iArgCount == 2)
+        {
+            Context.Poke.addr = va_arg(Args, int) & 0xffff;
+            Context.Poke.val = va_arg(Args, int) & 0xff;
+        }
+        break;
+    case P8_CALLRESULT_PEEK2:
+        if (iArgCount == 1)
+        {
+            Context.Peek.addr = va_arg(Args, int) & 0xffff;
+            switch (Context.Peek.addr)
+            {
+            case 0x5f28: // camera x
+                Return = Camera.x & 0xffff;
+                break;
+
+            case 0x5f2a: // camera y
+                Return = Camera.y & 0xffff;
+                break;
+
+            default: break;
+            }
+        } 
+        break;
+    case P8_CALLRESULT_POKE2: 
+        if (iArgCount == 2)
+        {
+            Context.Poke.addr = va_arg(Args, int) & 0xffff;
+            Context.Poke.val = va_arg(Args, int) & 0xffff;
+        }
+        break;
+    case P8_CALLRESULT_PEEK4: 
+        if (iArgCount == 1)
+        {
+            Context.Peek.addr = va_arg(Args, int) & 0xffff;
+            switch (Context.Peek.addr)
+            {
+            case 0x5f28: // camera x
+                Return = Camera.x & 0xffffffff;
+                break;
+
+            case 0x5f2a: // camera y
+                Return = Camera.y & 0xffffffff;
+                break;
+
+            default: break;
+            }
+        }
+        break;
+    case P8_CALLRESULT_POKE4: 
+        if (iArgCount == 2)
+        {
+            Context.Poke.addr = va_arg(Args, int) & 0xffff;
+            Context.Poke.val = va_arg(Args, int) & 0xffffffff;
+        }
+        break;
+
 
     default:
         break;
@@ -1027,6 +1110,16 @@ float P8_RND(float x)
 {
     uint32_t n = p8_rnd(x * (1 << 16));
     return (float)n / (1 << 16);
+}
+
+float P8_SIN(float x)
+{
+	return 1.0f
+}
+
+float P8_TIME()
+{
+	return 1.0f;
 }
 
 #include <math.h>

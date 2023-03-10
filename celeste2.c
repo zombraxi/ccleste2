@@ -1,5 +1,6 @@
 #include "celeste2.h"
 #include "object.h"
+#include "input.h"
 
 int level_index = 0;
 int level_intro = 0;

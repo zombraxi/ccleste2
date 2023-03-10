@@ -137,7 +137,12 @@ enum {
     P8_CALLRESULT_MGET,
     P8_CALLRESULT_FGET,
     P8_CALLRESULT_BTN,
-    P8_CALLRESULT_TIME,
+    P8_CALLRESULT_PEEK,
+    P8_CALLRESULT_POKE,
+    P8_CALLRESULT_PEEK2,
+    P8_CALLRESULT_POKE2,
+    P8_CALLRESULT_PEEK4,
+    P8_CALLRESULT_POKE4,
 };
 
 #define CR_TRUE (int)1
@@ -149,13 +154,15 @@ extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 inline int P8_BTN(int button) { return P8_CallResult(P8_CALLRESULT_BTN, 1, button); }
 inline int P8_MGET(int x, int y) { return P8_CallResult(P8_CALLRESULT_MGET, 2, x, y); }
 inline int P8_FGET(int n, int f) { return P8_CallResult(P8_CALLRESULT_FGET, 2, n, f); }
-inline int P8_TIME() { return P8_CallResult(P8_CALLRESULT_TIME, 0); }
 
 // Math, other operations that dont fit
 // the bill for being a Callback or CallResult
 
 extern float P8_RND(float x);
 extern float P8_SIN(float x);
+
+// time returns a float... so it cant be a callresult
+extern float P8_TIME();
 
 inline int P8_MAX_INT(int a, int b) { return (a > b) ? a : b; }
 inline int P8_MIN_INT(int a, int b) { return (a < b) ? a : b; }
