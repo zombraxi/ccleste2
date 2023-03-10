@@ -1114,7 +1114,7 @@ float P8_RND(float x)
 
 float P8_SIN(float x)
 {
-	return 1.0f
+	return 1.0f;
 }
 
 float P8_TIME()

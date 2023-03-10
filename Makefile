@@ -4,18 +4,18 @@ SDL2_DYN=`sdl2-config --libs` -lSDL2_mixer
 
 COMPILER=gcc
 OUTPUT_NAME=cc2
-SOURCE_FILES=celeste2.c p8.c object.c input.c
+SOURCE_FILES=celeste2.c p8.c object.c input.c objects.c player.c gamestate.c
 
-all: $(SOURCE_FILES) p8.h celeste2.h gamedata.h input.h object.h
+all: $(SOURCE_FILES) p8.h celeste2.h gamedata.h input.h object.h objects.h player.h gamestate.h
 	$(COMPILER) $(SOURCE_FILES) -O2 -g -o $(OUTPUT_NAME) $(SDL2_CONFIG) $(SDL2_DYN)
 
-static: $(SOURCE_FILES) p8.h celeste2.h gamedata.h
+static: $(SOURCE_FILES) p8.h celeste2.h gamedata.h input.h object.h objects.h player.h gamestate.h
 	$(COMPILER) $(SOURCE_FILES) -O2 -g -o $(OUTPUT_NAME) $(SDL2_CONFIG) $(SDL2_STATIC)
 
-release: $(SOURCE_FILES) p8.h celeste2.h gamedata.h
+release: $(SOURCE_FILES) p8.h celeste2.h gamedata.h input.h object.h objects.h player.h gamestate.h
 	$(COMPILER) $(SOURCE_FILES) -O2 -o $(OUTPUT_NAME) $(SDL2_CONFIG) $(SDL2_DYN)
 	
-release_static: $(SOURCE_FILES) p8.h celeste2.h gamedata.h
+release_static: $(SOURCE_FILES) p8.h celeste2.h gamedata.h input.h object.h objects.h player.h gamestate.h
 	$(COMPILER) $(SOURCE_FILES) -O2 -o $(OUTPUT_NAME) $(SDL2_CONFIG) $(SDL2_STATIC)
 
 clean: $(OUTPUT_NAME)

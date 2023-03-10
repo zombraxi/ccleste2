@@ -71,7 +71,7 @@ static void cm6(int px, int py)
     camera_target_x = P8_MAX_INT(P8_MIN_INT(level.width * 8 - 128, px - c_offset),0);
 
     if (level.is_camera_barriers_x == true)
-        camera_barrier_x(level.camera_barriers_x, px, py);
+        camera_x_barrier(level.camera_barriers_x, px, py);
 
     if (c_flag == true)
         camera_target_x = P8_MAX_INT(camera_target_x, 672);
@@ -132,7 +132,7 @@ void goto_level(int index)
         level_intro = 60;
 
     if (level_index == 2)
-        psfx(17, 8, 16);
+        psfx(17, 8, 16, 0);
 
     // load into ram the map
     switch (index)

@@ -1,6 +1,13 @@
+#include <stdlib.h>
+#include <memory.h>
+
+#include "p8.h"
 #include "celeste2.h"
 #include "object.h"
 #include "input.h"
+#include "gamestate.h"
+#include "objects.h"
+#include "player.h"
 
 bool standalone = false;
 
