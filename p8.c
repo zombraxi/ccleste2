@@ -672,11 +672,7 @@ static void P8DrawRectFill(int x0, int y0, int x1, int y1)
         return;
     }
     
-    // normal routine...
-    rect.x = x0 - Camera.x;
-    rect.y = y0 - Camera.y;
-    rect.w = x1 - x0;
-    rect.h = y1 - y0;
+    // plain fill...
     SDL_RenderFillRect(Renderer, &rect);
 
     return;

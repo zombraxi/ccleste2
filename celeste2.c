@@ -181,7 +181,7 @@ void _P8_update()
 
 void _P8_draw()
 {
-    
+    P8_RECTFILL2(50, 50, 75, 75, 7);
 }
 
 void draw_time(int x, int y)
