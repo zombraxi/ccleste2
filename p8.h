@@ -138,11 +138,8 @@ enum {
     P8_CALLRESULT_FGET,
     P8_CALLRESULT_BTN,
     P8_CALLRESULT_PEEK,
-    P8_CALLRESULT_POKE,
     P8_CALLRESULT_PEEK2,
-    P8_CALLRESULT_POKE2,
-    P8_CALLRESULT_PEEK4,
-    P8_CALLRESULT_POKE4,
+    P8_CALLRESULT_PEEK4
 };
 
 #define CR_TRUE (int)1
@@ -154,6 +151,9 @@ extern int P8_CallResult(int iCallResult, int iArgCount, ...);
 inline int P8_BTN(int button) { return P8_CallResult(P8_CALLRESULT_BTN, 1, button); }
 inline int P8_MGET(int x, int y) { return P8_CallResult(P8_CALLRESULT_MGET, 2, x, y); }
 inline int P8_FGET(int n, int f) { return P8_CallResult(P8_CALLRESULT_FGET, 2, n, f); }
+inline int P8_PEEK(int addr) { return P8_CallResult(P8_CALLRESULT_PEEK, 1, addr) & 0xff; }
+inline int P8_PEEK2(int addr) { return P8_CallResult(P8_CALLRESULT_PEEK2, 1, addr) & 0xffff; }
+inline int P8_PEEK4(int addr) { return P8_CallResult(P8_CALLRESULT_PEEK4, 1, addr) & 0xffffffff; }
 
 // Math, other operations that dont fit
 // the bill for being a Callback or CallResult

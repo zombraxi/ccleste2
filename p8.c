@@ -238,6 +238,14 @@ static void SetClippingRegion(int x, int y, int w, int h, bool clip_previous)
     }
 }
 
+static void RestoreClippingRegion()
+{
+    SetClipRectSDL(ClippingRegion.x,
+                        ClippingRegion.y,
+                        ClippingRegion.w,
+                        ClippingRegion.h);
+}
+
 static void ResetCamera()
 {
     Camera.x = 0;
@@ -592,6 +600,150 @@ int main(int argc, char** argv)
     return 0;
 }
 
+/*
+
+    Aligns everything so that the rectangle can be drawn as if starting
+    from its upper left point...
+
+*/
+static SDL_Rect GenerateSDLRectFromP8RectParams(int x0, int y0, int x1, int y1) 
+{
+    SDL_Rect rect;
+    // ... properly set up our rectangle
+    if (x1 > x0) // use x0 as the upper left...
+    {
+        if (y1 > y0) // use y0 as the upper left...
+        {
+            rect.x = x0 - Camera.x;
+            rect.y = y0 - Camera.y;
+            rect.w = x1 - x0;
+            rect.h = y1 - y0;
+        }
+        else { // use y1 as the upper left
+            rect.x = x0 - Camera.x;
+            rect.y = y1 - Camera.y;
+            rect.w = x1 - x0;
+            rect.h = y0 - y1;
+        }
+    }
+    else { // use x1 as the upper left...
+        if (y1 > y0) // use y0 as the upper left...
+        {
+            rect.x = x1 - Camera.x;
+            rect.y = y0 - Camera.y;
+            rect.w = x0 - x1;
+            rect.h = y1 - y0;
+        }
+        else { // use y1 as the upper left
+            rect.x = x1 - Camera.x;
+            rect.y = y1 - Camera.y;
+            rect.w = x0 - x1;
+            rect.h = y0 - y1;
+        }
+    }
+    
+    return rect;
+}
+
+static void P8DrawRect(int x0, int y0, int x1, int y1)
+{
+    SDL_Rect rect = GenerateSDLRectFromP8RectParams(x0, y0, x1, y1);
+    SDL_RenderDrawRect(Renderer, &rect);
+}
+
+static void P8DrawRectC(int x0, int y0, int x1, int y1, int col)
+{
+    SetColour(col);
+    SDL_Rect rect = GenerateSDLRectFromP8RectParams(x0, y0, x1, y1);
+    SDL_RenderDrawRect(Renderer, &rect);
+}
+
+static void P8DrawRectFill(int x0, int y0, int x1, int y1)
+{
+    SDL_Rect rect = GenerateSDLRectFromP8RectParams(x0, y0, x1, y1);
+    unsigned int fp_count;
+    int i, j;
+
+    // ! account for fill pattern !
+    if (FillPattern != FILLPATTERN_REG_DEFAULT)
+    {
+        // if there is an active fillpattern
+
+        return;
+    }
+    
+    // normal routine...
+    rect.x = x0 - Camera.x;
+    rect.y = y0 - Camera.y;
+    rect.w = x1 - x0;
+    rect.h = y1 - y0;
+    SDL_RenderFillRect(Renderer, &rect);
+
+    return;
+}
+
+static void P8DrawRectFillC(int x0, int y0, int x1, int y1, int col)
+{
+    SDL_Rect rect = GenerateSDLRectFromP8RectParams(x0, y0, x1, y1);
+    unsigned int fp_count;
+    int i, j;
+
+    SetColour(col);
+
+    // ! account for fill pattern !
+    if (FillPattern != FILLPATTERN_REG_DEFAULT)
+    {
+        // if there is an active fillpattern
+
+        return; // early return
+    }
+    
+    // plain fill...
+    SDL_RenderFillRect(Renderer, &rect);
+
+    return;
+}
+
+static void P8DrawCirc(int x, int y, int r)
+{
+
+}
+
+static void P8DrawCircC(int x, int y, int r, int col)
+{
+    
+}
+
+static void P8DrawCircFill(int x, int y, int r)
+{
+    // ! account for fill pattern !
+    if (FillPattern != FILLPATTERN_REG_DEFAULT)
+    {
+        // if there is an active fillpattern
+
+        return;
+    }
+    
+    // normal routine...
+
+    return;
+}
+
+static void P8DrawCircFillC(int x, int y, int r, int col)
+{
+    // ! account for fill pattern !
+    if (FillPattern != FILLPATTERN_REG_DEFAULT)
+    {
+        // if there is an active fillpattern
+
+        return;
+    }
+    
+    // normal routine...
+
+    return;
+}
+
 void P8_Callback(int iCallback, int iArgCount, ...)
 {
     // stores context for each callback
@@ -749,7 +901,8 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         else if (iArgCount == 1)
         {
             Context.Color.colour = va_arg(Args, int);
-            SetColour(Context.Color.colour);
+            if (Context.Color.colour >= 0 && Context.Color.colour <= 15)
+                SetColour(Context.Color.colour);
         }
         break;
 
@@ -770,15 +923,95 @@ void P8_Callback(int iCallback, int iArgCount, ...)
 
     // primitives
     case P8_CALLBACK_RECT: 
+        if (iArgCount == 4) // no colour supplied
+        {
+            Context.Rect.x0 = va_arg(Args, int);
+            Context.Rect.y0 = va_arg(Args, int);
+            Context.Rect.x1 = va_arg(Args, int);
+            Context.Rect.y1 = va_arg(Args, int);
+            P8DrawRect(Context.Rect.x0, Context.Rect.y0,
+                        Context.Rect.x1, Context.Rect.y1);
+        }
+
+        else if (iArgCount == 5) // colour supplied
+        {
+            Context.Rect.x0 = va_arg(Args, int);
+            Context.Rect.y0 = va_arg(Args, int);
+            Context.Rect.x1 = va_arg(Args, int);
+            Context.Rect.y1 = va_arg(Args, int);
+            Context.Rect.col = va_arg(Args, int);
+            if (Context.Rect.col >= 0 && Context.Rect.col <= 15)
+                P8DrawRectC(Context.Rect.x0, Context.Rect.y0,
+                            Context.Rect.x1, Context.Rect.y1,
+                            Context.Rect.col);
+        }
         break;
 
     case P8_CALLBACK_RECTFILL: 
+        if (iArgCount == 4) // no colour supplied
+        {
+            Context.Rect.x0 = va_arg(Args, int);
+            Context.Rect.y0 = va_arg(Args, int);
+            Context.Rect.x1 = va_arg(Args, int);
+            Context.Rect.y1 = va_arg(Args, int);
+            P8DrawRectFill(Context.Rect.x0, Context.Rect.y0,
+                        Context.Rect.x1, Context.Rect.y1);
+        }
+
+        else if (iArgCount == 5) // colour supplied
+        {
+            Context.Rect.x0 = va_arg(Args, int);
+            Context.Rect.y0 = va_arg(Args, int);
+            Context.Rect.x1 = va_arg(Args, int);
+            Context.Rect.y1 = va_arg(Args, int);
+            Context.Rect.col = va_arg(Args, int);
+            if (Context.Rect.col >= 0 && Context.Rect.col <= 15)
+                P8DrawRectFillC(Context.Rect.x0, Context.Rect.y0,
+                            Context.Rect.x1, Context.Rect.y1,
+                            Context.Rect.col);
+        }
         break;
 
     case P8_CALLBACK_CIRC: 
+        if (iArgCount == 3) // no colour supplied
+        {
+            Context.Circ.x = va_arg(Args, int);
+            Context.Circ.y = va_arg(Args, int);
+            Context.Circ.r = va_arg(Args, int);
+            P8DrawCirc(Context.Circ.x, Context.Circ.y, Context.Circ.r);
+        }
+
+        else if (iArgCount == 4) // colour supplied
+        {
+            Context.Circ.x = va_arg(Args, int);
+            Context.Circ.y = va_arg(Args, int);
+            Context.Circ.r = va_arg(Args, int);
+            Context.Circ.col = va_arg(Args, int);
+            if (Context.Circ.col >= 0 && Context.Circ.col <= 15)
+                P8DrawCircC(Context.Circ.x, Context.Circ.y, 
+                    Context.Circ.r, Context.Circ.col);
+        }
         break;
 
     case P8_CALLBACK_CIRCFILL: 
+        if (iArgCount == 3) // no colour supplied
+        {
+            Context.Circ.x = va_arg(Args, int);
+            Context.Circ.y = va_arg(Args, int);
+            Context.Circ.r = va_arg(Args, int);
+            P8DrawCircFill(Context.Circ.x, Context.Circ.y, Context.Circ.r);
+        }
+
+        else if (iArgCount == 4) // colour supplied
+        {
+            Context.Circ.x = va_arg(Args, int);
+            Context.Circ.y = va_arg(Args, int);
+            Context.Circ.r = va_arg(Args, int);
+            Context.Circ.col = va_arg(Args, int);
+            if (Context.Circ.col >= 0 && Context.Circ.col <= 15)
+                P8DrawCircFillC(Context.Circ.x, Context.Circ.y, Context.Circ.r,
+                                Context.Circ.col);
+        }
         break;
 
     case P8_CALLBACK_OVAL: 
@@ -895,6 +1128,7 @@ void P8_Callback(int iCallback, int iArgCount, ...)
         }
         break;
 
+
     default:
         break;
     }
@@ -1005,13 +1239,7 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
             }
         }
         break;
-    case P8_CALLRESULT_POKE: 
-        if (iArgCount == 2)
-        {
-            Context.Poke.addr = va_arg(Args, int) & 0xffff;
-            Context.Poke.val = va_arg(Args, int) & 0xff;
-        }
-        break;
+    
     case P8_CALLRESULT_PEEK2:
         if (iArgCount == 1)
         {
@@ -1030,13 +1258,7 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
             }
         } 
         break;
-    case P8_CALLRESULT_POKE2: 
-        if (iArgCount == 2)
-        {
-            Context.Poke.addr = va_arg(Args, int) & 0xffff;
-            Context.Poke.val = va_arg(Args, int) & 0xffff;
-        }
-        break;
+
     case P8_CALLRESULT_PEEK4: 
         if (iArgCount == 1)
         {
@@ -1053,13 +1275,6 @@ int P8_CallResult(int iCallResult, int iArgCount, ...)
 
             default: break;
             }
-        }
-        break;
-    case P8_CALLRESULT_POKE4: 
-        if (iArgCount == 2)
-        {
-            Context.Poke.addr = va_arg(Args, int) & 0xffff;
-            Context.Poke.val = va_arg(Args, int) & 0xffffffff;
         }
         break;
 
@@ -1112,6 +1327,7 @@ float P8_RND(float x)
     return (float)n / (1 << 16);
 }
 
+#include <math.h>
 float P8_SIN(float x)
 {
 	return 1.0f;
@@ -1121,5 +1337,3 @@ float P8_TIME()
 {
 	return 1.0f;
 }
-
-#include <math.h>
